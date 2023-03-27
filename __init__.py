@@ -65,7 +65,7 @@ class CalendarEvents(MycroftSkill):
         parser = IcsParser()
         ev = parser.parse(event)
         date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
-        self.speak("I Found {} Event Today".format(len(ev)))
+        self.speak("I Found {} Event Today".format(len(events)))
         self.speak("The Event is {}".format(ev.get_summary()))
         self.speak("At {}".format(date))
 
