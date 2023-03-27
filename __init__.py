@@ -55,8 +55,9 @@ class CalendarEvents(MycroftSkill):
         return calendars[0]
 
     def get_events_today(self) -> list[caldav.Event]:
-        today = to_local(now_utc())
-        results = self.__calendar.search(start=today, end=today + timedelta(days=1), expand=False, event =True)
+        today = now_utc().replace(hour=0, minute=1, second=21)
+        today_local = to_local(today)
+        results = self.__calendar.search(start=today_local, end=to_local(today.replace(hour=23, minute=59, second=58)), expand=False, event =True)
         return results
 
     def one_event_today(self, events : list[caldav.Event]):
