@@ -66,6 +66,7 @@ class CalendarEvents(MycroftSkill):
             self.one_event_today(events)
         else:
             self.multiple_events_today(events)
+            
 
     def handle_events_date(self, date: datetime):
         events = self.get_events_date(date)
@@ -112,6 +113,7 @@ class CalendarEvents(MycroftSkill):
             date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
             self.speak("Event {}, is {}".format(events.index(event) + 1, ev.get_summary()))
             self.speak("At {}".format(date))
+
         
     def one_event_date(self, events : list[caldav.Event]):
         event = events[0]
@@ -121,6 +123,7 @@ class CalendarEvents(MycroftSkill):
         self.speak("I Found {} Event".format(len(events)))
         self.speak("The Event is {}".format(ev.get_summary()))
         self.speak("At {}".format(date))
+
 
     def multiple_events_date(self, events : list[caldav.Event]):
         self.speak("I Found {} Events".format(len(events)))
