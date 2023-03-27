@@ -62,20 +62,24 @@ class CalendarEvents(MycroftSkill):
 
     def one_event_today(self, events : list[caldav.Event]):
         event = events[0]
-        parser = IcsParser(event)
-        event = parser.parse()
-        date = nice_time(event.get_starttime(), use_24hour=True, use_ampm=True)
-        self.speak("I Found {} Event Today".format(len(events)))
-        self.speak("The Event is {}".format(event.get_summary()))
+        parser = IcsParser()
+        ev = parser.parse(event)
+        date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
+        self.speak("I Found {} Event Today".format(len(ev)))
+        self.speak("The Event is {}".format(ev.get_summary()))
         self.speak("At {}".format(date))
 
     def multiple_events_today(self, events : list[caldav.Event]):
         self.speak("I Found {} Events Today".format(len(events)))
+        ev_list = [caldav.Event]
         for event in events:
-            parser = IcsParser(event)
-            event = parser.parse()
-            self.speak("The Event is called {}".format(event.get_summary()))
-            self.speak("At {}".format(event))
+            parser = IcsParser()
+            ev = parser.parse(event)
+            ev_list.append(ev)
+        for ev in ev_list:
+            date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
+            self.speak("The Event is {}".format(ev.get_summary()))
+            self.speak("At {}".format(date))
 
 def create_skill():
     return CalendarEvents()
