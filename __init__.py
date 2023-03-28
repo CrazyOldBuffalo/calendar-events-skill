@@ -24,16 +24,7 @@ class CalendarEvents(MycroftSkill):
         self.get_credentials()
         self.__caldavservice = CalDAVService(self.__url, self.__username, self.__password)
         self.__parser = IcsParser()
-        if not self.__caldavservice.connect():
-            self.speak_dialog('connection.error', wait=True)
-            self.shutdown()
-        if not self.__caldavservice.get_calendars():
-            self.speak_dialog('calendar.error', wait=True)
-            self.shutdown()
 
-    
-    def shutdown(self):
-        self.speak_dialog('failed.to.execute', wait=True)
 
     def extract_date(self, timeset):
         exdate, rest = extract_datetime(timeset) or (None, None)
@@ -47,6 +38,14 @@ class CalendarEvents(MycroftSkill):
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
         self.initialize()
+        if not self.__caldavservice.connect():
+            self.speak_dialog('connection.error', wait=True)
+            self.shutdown()
+            return True
+        if not self.__caldavservice.get_calendars():
+            self.speak_dialog('calendar.error', wait=True)
+            self.shutdown()
+            return True
         data = message.data.get('date')
         if data is None:
             self.__timeset = now_utc()
@@ -62,7 +61,7 @@ class CalendarEvents(MycroftSkill):
     def handle_events(self):
         events = self.__caldavservice.get_events_date(self.__timeset)
         if not events:
-            self.speak_dialog('no.events', data={'date': nice_date_time(self.__timeset, lang=self.lang, use_24hour=True, use_ampm=True)})
+            self.speak_dialog('no.events', data={'date': nice_date(self.__timeset, lang=self.lang)})
         else:
             self.output_events(events)
         
@@ -70,17 +69,17 @@ class CalendarEvents(MycroftSkill):
         if self.__today:
             self.speak('You have {} event today'.format(len(events)))
         else:
-            self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset.date(), lang=self.lang)))
+            self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset, lang=self.lang)))
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
             self.speak("{}" .format(ev.get_summary()))
-            self.speak("It starts at {}" .format(nice_time(ev.get_startdatetime(), lang=self.lang, use_24hour=True, use_ampm=True)))
+            self.speak("It starts at {}" .format(nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)))
         else:
             for event in events:
                 ev = self.__parser.parse(event)
                 self.speak("Event {}" .format(events.index(event)+1))
                 self.speak("{}" .format(ev.get_summary()))
-                self.speak("It starts at {}" .format(nice_date(ev.get_startdate(), lang=self.lang, use_24hour=True, use_ampm=True)))
+                self.speak("It starts at {}" .format(nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)))
 
 
 def create_skill():

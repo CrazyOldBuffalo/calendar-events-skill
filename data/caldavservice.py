@@ -1,5 +1,7 @@
 import caldav
 from datetime import datetime
+from urllib3.exceptions import MaxRetryError as E
+from requests.exceptions import ConnectionError
 from mycroft.util.time import now_utc, to_local
 
 class CalDAVService:
@@ -15,7 +17,7 @@ class CalDAVService:
         try:
             client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
             self.__principle = client.principal()
-        except (ConnectionError, ConnectionAbortedError, ConnectionAbortedError, TimeoutError):
+        except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, TimeoutError, E):
             return False
         return True
     
