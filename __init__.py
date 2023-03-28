@@ -33,6 +33,7 @@ class CalendarEvents(MycroftSkill):
             self.shutdown()
         else:
             return exdate
+        
     
     @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
@@ -64,6 +65,7 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('no.events', data={'date': nice_date(self.__timeset, lang=self.lang)})
         else:
             self.output_events(events)
+
         
     def output_events(self, events: list[caldav.Event]):
         if self.__today:
