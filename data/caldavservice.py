@@ -1,5 +1,5 @@
 import caldav
-from typing import Tuple
+from datetime import datetime
 from mycroft.util.time import now_utc, to_local
 
 class CalDAVService:
@@ -8,24 +8,28 @@ class CalDAVService:
         self.__username = username
         self.__password = password
         self.__url = url
+        self.__principle = None
     
 
-    def connect(self) -> Tuple[caldav.Principal, None]:
+    def connect(self) -> bool:
         try:
             client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
-            my_principal = client.principal()
+            self.__principle = client.principal()
         except (ConnectionError, ConnectionAbortedError, ConnectionAbortedError, TimeoutError):
-            return None
-        return my_principal
+            return False
+        return True
     
-    def get_calendars(self) -> caldav.Calendar:
-        calendars = self.__principle.calendars()
-        return calendars[0]
+    def get_calendars(self) -> bool:
+        try:
+            self.__calendars = self.__principle.calendars()[0]
+            return True
+        except IndexError:
+            return False
     
-    def get_events_today(self, calendar : caldav.Calendar) -> list[caldav.Event]:
-        events = calendar.search(start=to_local(now_utc()), end=to_local(now_utc().replace(hour=23, minute=59, second=58)), expand=False, event=True)
+    def get_events_today(self) -> list[caldav.Event]:
+        events = self.__calendars.search(start=to_local(now_utc()), end=to_local(now_utc().replace(hour=23, minute=59, second=58)), expand=False, event=True)
         return events
 
     def get_events_date(self, date: datetime) -> list[caldav.Event]:
-        events = self.__calendar.date_search(date, date + timedelta(days=1))
+        events = self.__calendars.search(start=to_local(date), end=to_local(date.replace(hour=23, minute=59, second=58)), expand=False, event=True)
         return events
