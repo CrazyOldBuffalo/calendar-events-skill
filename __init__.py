@@ -1,7 +1,7 @@
 from datetime import datetime
 import caldav
 from .data import *
-from mycroft import MycroftSkill, intent_file_handler
+from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from mycroft.util.parse import extract_datetime
 from mycroft.util.time import now_utc, to_local
 from lingua_franca.format import nice_date_time, nice_time, nice_date
@@ -34,11 +34,23 @@ class CalendarEvents(MycroftSkill):
         else:
             return exdate
         
+    @intent_handler('create.event.calendar.intent')
+    def handle_create_events_calendar(self):
+        self.speak_dialog('create.event.calendar', wait=True)
+        if not self.__caldavservice.connect():
+            self.speak_dialog('connection.error', wait=True)
+            self.shutdown()
+            return True
+        if not self.__caldavservice.get_calendars():
+            self.speak_dialog('calendar.error', wait=True)
+            self.shutdown()
+            return True
+        self.event_creation()
+        
     
-    @intent_file_handler('events.calendar.intent')
+    @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
-        self.initialize()
         if not self.__caldavservice.connect():
             self.speak_dialog('connection.error', wait=True)
             self.shutdown()
@@ -51,7 +63,7 @@ class CalendarEvents(MycroftSkill):
         if data is None:
             self.__timeset = now_utc()
             self.__today = True
-        elif data == 'today':
+        elif 'today'.lower() in data:
             self.__today = True
             self.__timeset = self.extract_date(data)
         else:
@@ -66,7 +78,10 @@ class CalendarEvents(MycroftSkill):
         else:
             self.output_events(events)
 
-        
+    
+    def event_creation(self):
+        summary = self.get_response('get.summary', num_retries=2)
+
     def output_events(self, events: list[caldav.Event]):
         if self.__today:
             self.speak('You have {} event today'.format(len(events)))
