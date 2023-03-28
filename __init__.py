@@ -70,7 +70,7 @@ class CalendarEvents(MycroftSkill):
         if self.__today:
             self.speak('You have {} event today'.format(len(events)))
         else:
-            self.speak('You have {} events on {}'.format(len(events), nice_date_time(self.__timeset, lang=self.lang, use_24hour=True, use_ampm=True)))
+            self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset.date(), lang=self.lang)))
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
             self.speak("{}" .format(ev.get_summary()))
