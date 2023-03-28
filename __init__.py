@@ -4,7 +4,7 @@ from .data import *
 from mycroft import MycroftSkill, intent_file_handler
 from mycroft.util.parse import extract_datetime
 from mycroft.util.time import now_utc, to_local
-from lingua_franca.format import nice_date_time, nice_time
+from lingua_franca.format import nice_date_time, nice_time, nice_date
 
 
 class CalendarEvents(MycroftSkill):
@@ -74,13 +74,13 @@ class CalendarEvents(MycroftSkill):
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
             self.speak("{}" .format(ev.get_summary()))
-            self.speak("It starts at {}" .format(nice_time(ev.get_start(), lang=self.lang, use_24hour=True, use_ampm=True)))
+            self.speak("It starts at {}" .format(nice_time(ev.get_startdatetime(), lang=self.lang, use_24hour=True, use_ampm=True)))
         else:
             for event in events:
                 ev = self.__parser.parse(event)
                 self.speak("Event {}" .format(events.index(event)+1))
                 self.speak("{}" .format(ev.get_summary()))
-                self.speak("It starts at {}" .format(nice_time(ev.get_start(), lang=self.lang, use_24hour=True, use_ampm=True)))
+                self.speak("It starts at {}" .format(nice_date(ev.get_startdate(), lang=self.lang, use_24hour=True, use_ampm=True)))
 
 
 def create_skill():
