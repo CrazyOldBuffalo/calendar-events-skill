@@ -4,6 +4,7 @@ class IcsParser:
     def __init__(self) -> None:
         pass
 
+
     def parse(self, ics) -> EventObj:
         starttimestamp = ics.icalendar_component.get('DTSTART').dt
         endtimestamp = ics.icalendar_component.get('DTEND').dt
