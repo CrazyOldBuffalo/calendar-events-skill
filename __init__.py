@@ -46,7 +46,6 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('calendar.error', wait=True)
             self.shutdown()
             return True
-        self.speak('test', wait=True)
         self.event_creation()
         
     
