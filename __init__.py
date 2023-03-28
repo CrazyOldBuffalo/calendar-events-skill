@@ -34,6 +34,9 @@ class CalendarEvents(MycroftSkill):
         else:
             return exdate
         
+    @intent_file_handler('events.calendar.intent')
+    def handle_create_events_calendar(self, message):
+        self.speak_dialog('events.calendar', wait=True)
     
     @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
