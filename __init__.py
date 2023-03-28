@@ -80,14 +80,7 @@ class CalendarEvents(MycroftSkill):
 
     
     def event_creation(self):
-        summary = self.get_summary()
-
-    def get_summary(self) -> str:
         summary = self.get_response('get.summary', num_retries=2)
-            
-
-
-
 
     def output_events(self, events: list[caldav.Event]):
         if self.__today:
