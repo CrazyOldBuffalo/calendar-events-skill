@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import caldav
 from .data import *
 from mycroft import MycroftSkill, intent_file_handler
 from mycroft.util.parse import extract_datetime
 from mycroft.util.time import now_utc, to_local
-from lingua_franca.format import nice_date_time, nice_time
+from lingua_franca.format import nice_date_time, nice_time, nice_date
 
 
 class CalendarEvents(MycroftSkill):
@@ -22,114 +22,65 @@ class CalendarEvents(MycroftSkill):
 
     def initialize(self):
         self.get_credentials()
+        self.__caldavservice = CalDAVService(self.__url, self.__username, self.__password)
+        self.__parser = IcsParser()
+        if not self.__caldavservice.connect():
+            self.speak_dialog('connection.error', wait=True)
+            self.shutdown()
+        if not self.__caldavservice.get_calendars():
+            self.speak_dialog('calendar.error', wait=True)
+            self.shutdown()
 
     
     def shutdown(self):
-        self.speak_dialog('failed.to.execute')
+        self.speak_dialog('failed.to.execute', wait=True)
 
+    def extract_date(self, timeset):
+        exdate, rest = extract_datetime(timeset) or (None, None)
+        if exdate is None:
+            self.speak_dialog('date.error', wait=True)
+            self.shutdown()
+        else:
+            return exdate
     
     @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
-        self.initialize()
-        timeset = message.data.get('date')
         self.speak_dialog('events.calendar', wait=True)
-        self.__principle = self.connect()
-        self.__calendar = self.get_calendars()
-        
-        if 'today' in timeset:
-            self.handle_events_today(timeset)
+        self.initialize()
+        data = message.data.get('date')
+        if data is None:
+            self.__timeset = now_utc()
+            self.__today = True
+        elif data == 'today':
+            self.__today = True
+            self.__timeset = self.extract_date(data)
         else:
-            exdate, rest = extract_datetime(timeset) or (None, None)
-            if exdate is None:
-                self.speak_dialog('date.error')
-                self.shutdown()
-            else:
-                self.speak(nice_date_time(exdate, lang=self.lang, use_24hour=True, use_ampm=True), wait=True)
-                self.handle_events_date(exdate)
+            self.__today = False
+            self.__timeset = self.extract_date(data)
+        self.handle_events()
 
-        
-    def connect(self) -> caldav.Principal:
-        try:
-            client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
-            my_principal = client.principal()
-        except (ConnectionError, ConnectionAbortedError, ConnectionAbortedError, TimeoutError):
-            self.speak_dialog('connection.error')
-            self.shutdown()
-        return my_principal
-
-
-    def handle_events_today(self, date: str):
-        events = self.get_events_today()
+    def handle_events(self):
+        events = self.__caldavservice.get_events_date(self.__timeset)
         if not events:
-            self.speak_dialog('no.events', data={'date': date})
-        elif len(events) == 1:
-            self.one_event_today(events)
+            self.speak_dialog('no.events', data={'date': nice_date_time(self.__timeset, lang=self.lang, use_24hour=True, use_ampm=True)})
         else:
-            self.multiple_events_today(events)
-
-    def handle_events_date(self, date: datetime):
-        events = self.get_events_date(date)
-        if not events:
-            self.speak_dialog('no.events', data={'date': nice_date_time(date, lang=self.lang, use_24hour=True, use_ampm=True)})
-        elif len(events) == 1:
-            self.one_event_date(events)
-        else:
-            self.multiple_events_date(events)
-    
-
-    def get_calendars(self) -> caldav.Calendar:
-        calendars = self.__principle.calendars()
-        return calendars[0]
-    
-
-    def get_events_today(self) -> list[caldav.Event]:
-        today = now_utc().replace(hour=0, minute=1, second=21)
-        today_local = to_local(today)
-        results = self.__calendar.search(start=today_local, end=to_local(today.replace(hour=23, minute=59, second=58)), expand=False, event=True)
-        return results
-    
-    
-    def get_events_date(self, searchdate: datetime) -> list[caldav.Event]:
-        results = self.__calendar.search(start=searchdate, end=searchdate.replace(hour=23, minute=59, second=58), expand=False, event=True)
-        return results
-    
-
-    def one_event_today(self, events : list[caldav.Event]):
-        event = events[0]
-        parser = IcsParser()
-        ev = parser.parse(event)
-        date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
-        self.speak("I Found {} Event Today".format(len(events)))
-        self.speak("The Event is {}".format(ev.get_summary()))
-        self.speak("At {}".format(date))
-
-
-    def multiple_events_today(self, events : list[caldav.Event]):
-        self.speak("I Found {} Events Today".format(len(events)))
-        for event in events:
-            parser = IcsParser()
-            ev = parser.parse(event)
-            date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
-            self.speak("Event {}, is {}".format(events.index(event) + 1, ev.get_summary()))
-            self.speak("At {}".format(date))
+            self.output_events(events)
         
-    def one_event_date(self, events : list[caldav.Event]):
-        event = events[0]
-        parser = IcsParser()
-        ev = parser.parse(event)
-        date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
-        self.speak("I Found {} Event".format(len(events)))
-        self.speak("The Event is {}".format(ev.get_summary()))
-        self.speak("At {}".format(date))
-
-    def multiple_events_date(self, events : list[caldav.Event]):
-        self.speak("I Found {} Events".format(len(events)))
-        for event in events:
-            parser = IcsParser()
-            ev = parser.parse(event)
-            date = nice_time(ev.get_starttime(), use_24hour=True, use_ampm=True)
-            self.speak("Event {}, is {}".format(events.index(event) + 1, ev.get_summary()))
-            self.speak("At {}".format(date))
+    def output_events(self, events: list[caldav.Event]):
+        if self.__today:
+            self.speak('You have {} event today'.format(len(events)))
+        else:
+            self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset.date(), lang=self.lang)))
+        if len(events) == 1:
+            ev = self.__parser.parse(events[0])
+            self.speak("{}" .format(ev.get_summary()))
+            self.speak("It starts at {}" .format(nice_time(ev.get_startdatetime(), lang=self.lang, use_24hour=True, use_ampm=True)))
+        else:
+            for event in events:
+                ev = self.__parser.parse(event)
+                self.speak("Event {}" .format(events.index(event)+1))
+                self.speak("{}" .format(ev.get_summary()))
+                self.speak("It starts at {}" .format(nice_date(ev.get_startdate(), lang=self.lang, use_24hour=True, use_ampm=True)))
 
 
 def create_skill():
