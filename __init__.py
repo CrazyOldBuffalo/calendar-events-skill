@@ -37,6 +37,7 @@ class CalendarEvents(MycroftSkill):
     @intent_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self):
         self.speak_dialog('create.event.calendar', wait=True)
+        self.initialize()
         if not self.__caldavservice.connect():
             self.speak_dialog('connection.error', wait=True)
             self.shutdown()
@@ -51,6 +52,7 @@ class CalendarEvents(MycroftSkill):
     @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
+        self.initialize()
         if not self.__caldavservice.connect():
             self.speak_dialog('connection.error', wait=True)
             self.shutdown()
