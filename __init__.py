@@ -86,19 +86,9 @@ class CalendarEvents(MycroftSkill):
 
     def get_summary(self) -> str:
         summary = self.get_response('get.summary', num_retries=2)
-        if 'cancel'.lower() in summary:
-            self.speak_dialog('cancel.event', wait=True)
-            return None
-        elif self.confirmation(self, summary):
-            return summary
             
 
-    def confirmation(self, string : str) -> bool:
-        confirmation = self.yes_no(dialog='confirmation', data={'string': string})
-        if self.voc_match(confirmation, 'yes'):
-            return True
-        else:
-            return False
+
 
 
     def output_events(self, events: list[caldav.Event]):
