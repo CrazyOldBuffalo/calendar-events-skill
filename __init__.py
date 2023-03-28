@@ -86,16 +86,12 @@ class CalendarEvents(MycroftSkill):
         summary = self.get_summary()
 
     def get_summary(self) -> str:
-        dataloop = True
-        while dataloop:
-            summary = self.get_response('get.summary', num_retries=2)
-            if 'cancel'.lower() in summary:
-                self.speak_dialog('cancel.event', wait=True)
-                dataloop = False
-                return None
-            elif self.confirmation(self, summary):
-                dataloop = False
-                return summary
+        summary = self.get_response('get.summary', num_retries=2)
+        if 'cancel'.lower() in summary:
+            self.speak_dialog('cancel.event', wait=True)
+            return None
+        elif self.confirmation(self, summary):
+            return summary
             
 
     def confirmation(self, string : str) -> bool:
