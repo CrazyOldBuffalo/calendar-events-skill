@@ -82,7 +82,6 @@ class CalendarEvents(MycroftSkill):
 
     
     def event_creation(self):
-        self.speak_dialog('event.creation', wait=True)
         summary = self.get_summary()
 
     def get_summary(self) -> str:
