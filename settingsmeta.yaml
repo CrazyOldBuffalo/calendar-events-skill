@@ -12,8 +12,8 @@ skillMetadata:
         - name: password
           type: password
           label: Password
-          value: ""
+          value: "password"
         - name: url
           type: text
           label: url for CalDAV server
-          value: ""
+          value: "https://localhost/dav.php"
