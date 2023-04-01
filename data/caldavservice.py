@@ -1,5 +1,5 @@
 import caldav
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib3.exceptions import MaxRetryError as E
 from requests.exceptions import ConnectionError
 from mycroft.util.time import now_utc, to_local
@@ -41,6 +41,22 @@ class CalDAVService:
                                          end=to_local(date.replace(hour=23, minute=59, second=58)), expand=False,
                                          event=True)
         return events
+
+    def create_event(self, startdate: datetime, summary: str) -> caldav.Event:
+        event = self.__calendars.save_event(
+            dtstart=startdate,
+            dtend=startdate + timedelta(hours=1),
+            summary=summary,
+        )
+        return event
+
+    def create_event_end_time(self, startdate: datetime, enddate: datetime, summary: str) -> caldav.Event:
+        event = self.__calendars.save_event(
+            dtstart=startdate,
+            dtend=enddate,
+            summary=summary,
+        )
+        return event
 
     # Getters and Setters
     def get_url(self) -> str:
