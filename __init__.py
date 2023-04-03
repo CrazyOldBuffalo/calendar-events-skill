@@ -107,14 +107,19 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
             return False
-        date = self.get_response('get.date', num_retries=2)
-        self.extract_date(date)
+        date = self.get_response('date', num_retries=2)
+        date = self.extract_date(date)
+        if date is None:
+            return False
         if not self.confirmation(date):
             # Exits the skill if the user doesn't confirm the date
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
             return False
-        time = self.get_response('get.time', num_retries=2)
+        time = self.get_response('time', num_retries=2)
+        time = self.extract_date(time)
+        if time is None:
+            return False
         if not self.confirmation(time):
             # Exits the skill if the user doesn't confirm the time
             self.speak_dialog('event.creation.cancelled')
@@ -140,7 +145,6 @@ class CalendarEvents(MycroftSkill):
         self.speak_dialog('event.creation.success', data={'summary': created_event.get_summary(), 'date': event_date,
                                                           'time': event_time})
 
-
     def output_events(self, events: list[caldav.Event]):
         if self.__today:
             self.speak('You have {} event today'.format(len(events)))
@@ -148,16 +152,14 @@ class CalendarEvents(MycroftSkill):
             self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset, lang=self.lang)))
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
-            self.speak("{}".format(ev.get_summary()))
-            self.speak("It starts at {}".format(
-                nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)))
+            ev_starttime = nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
+            self.speak_dialog('one.event', data={'summary': ev.get_summary(), 'date': ev_starttime})
         else:
             for event in events:
                 ev = self.__parser.parse(event)
-                self.speak("Event {}".format(events.index(event) + 1))
-                self.speak("{}".format(ev.get_summary()))
-                self.speak("It starts at {}".format(
-                    nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)))
+                ev_starttime = nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
+                self.speak_dialog('x.event', data={'num': events.index(event) + 1, 'summary': ev.get_summary(),
+                                                   'date': ev_starttime})
 
 
 def create_skill():
