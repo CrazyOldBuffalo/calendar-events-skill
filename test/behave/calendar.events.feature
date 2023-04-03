@@ -55,3 +55,22 @@ Feature: calendar-events
         | Next Monday |
         | The 15th of December |
 
+  Scenario: User wants to create an event
+    given: an English speaking user
+      when: the user says "add an event to my calendar"
+      then: "calendar-events" should respond with dialog from "create.event.calendar"
+        and: "calendar-events" should respond with dialog from "get.summary"
+        and: the user says "<summary>"
+        then: "calendar-events" should respond with dialog from "confirmation"
+        and: the user responds with "yes"
+        then: "calendar-events" should respond with dialog from "date"
+        and: the user says "<date>"
+        then: "calendar-events" should respond with dialog from "confirmation"
+        and: the user responds with "yes"
+        then: "calendar-events" should respond with dialog from "time"
+        and: the user says "<time>>"
+        then: "calendar-events" should respond with dialog from "confirmation"
+        and: the user responds with "yes"
+        then: "calendar-events" should respond with dialog from "event.confirmation"
+        and: and the user says "yes"
+        and: "calendar-events" should respond with dialog from "event.creation.success"
