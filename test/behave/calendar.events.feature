@@ -29,6 +29,7 @@ Feature: calendar-events
         then: "calendar-events" should respond with dialog from "one.event"
 
     Examples:
+      | date |
       | Tomorrow |
       | Next Monday |
       | The 15th of December |
@@ -40,6 +41,7 @@ Feature: calendar-events
         then: "calendar-events" should respond with dialog from "x.event"
 
     Examples:
+        | date |
         | Tomorrow |
         | Next Monday |
         | The 15th of December |
@@ -51,6 +53,7 @@ Feature: calendar-events
             then: "calendar-events" should respond with dialog from "no.events"
 
     Examples:
+        | date |
         | Tomorrow |
         | Next Monday |
         | The 15th of December |
