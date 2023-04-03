@@ -27,8 +27,19 @@ class CalendarEvents(MycroftSkill):
         if exdate is None:
             self.speak_dialog('date.error', wait=True)
             self.shutdown()
+            return None
         else:
             return exdate
+
+    def connection(self) -> bool:
+        if not self.__caldavservice.connect():
+            self.speak_dialog('connection.error', wait=True)
+            self.shutdown()
+            return False
+        if not self.__caldavservice.get_calendars():
+            self.speak_dialog('calendar.error', wait=True)
+            self.shutdown()
+            return False
 
     # checks if the data is a date or a time and returns the correct nice format
     # then confirms the data with the user
@@ -52,33 +63,23 @@ class CalendarEvents(MycroftSkill):
     def handle_create_events_calendar(self):
         self.speak_dialog('create.event.calendar', wait=True)
         self.initialize()
-        if not self.__caldavservice.connect():
-            self.speak_dialog('connection.error', wait=True)
-            self.shutdown()
-            return True
-        if not self.__caldavservice.get_calendars():
-            self.speak_dialog('calendar.error', wait=True)
-            self.shutdown()
+        if not self.connection():
             return True
         created_event = self.event_creation()
+        if created_event is False:
+            return True
         if created_event.id is None:
             self.speak_dialog('event.creation.error', wait=True)
             self.shutdown()
             return True
         created_event = self.__parser.parse(created_event)
-        self.speak_dialog('event.creation.success', data={}, wait=True)
+        self.created_event_output(created_event)
 
     @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
         self.initialize()
-        if not self.__caldavservice.connect():
-            self.speak_dialog('connection.error', wait=True)
-            self.shutdown()
-            return True
-        if not self.__caldavservice.get_calendars():
-            self.speak_dialog('calendar.error', wait=True)
-            self.shutdown()
+        if not self.connection():
             return True
         data = message.data.get('date')
         if data is None:
@@ -105,27 +106,26 @@ class CalendarEvents(MycroftSkill):
             # Exits the skill if the user doesn't confirm the summary
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
-            return True
+            return False
         date = self.get_response('get.date', num_retries=2)
         self.extract_date(date)
         if not self.confirmation(date):
             # Exits the skill if the user doesn't confirm the date
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
-            return True
+            return False
         time = self.get_response('get.time', num_retries=2)
         if not self.confirmation(time):
             # Exits the skill if the user doesn't confirm the time
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
-            return True
+            return False
         if not self.event_confirmation(summary, date, time):
             self.speak_dialog('event.creation.cancelled')
             self.shutdown()
-            return True
+            return False
         new_event = self.__caldavservice.create_event(summary, date, time)
         return new_event
-
 
     def event_confirmation(self, summary, date, time):
         confirmation = self.ask_yesno('event.confirmation', data={'summary': summary, 'date': date, 'time': time})
@@ -133,6 +133,13 @@ class CalendarEvents(MycroftSkill):
             return True
         elif confirmation == 'no':
             return False
+
+    def created_event_output(self, created_event: EventObj) -> None:
+        event_date = nice_date(created_event.get_startdate(), lang=self.lang)
+        event_time = nice_time(created_event.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
+        self.speak_dialog('event.creation.success', data={'summary': created_event.get_summary(), 'date': event_date,
+                                                          'time': event_time})
+
 
     def output_events(self, events: list[caldav.Event]):
         if self.__today:
