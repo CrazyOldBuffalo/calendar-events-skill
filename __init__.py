@@ -41,24 +41,6 @@ class CalendarEvents(MycroftSkill):
             self.shutdown()
             return False
 
-    # checks if the data is a date or a time and returns the correct nice format
-    # then confirms the data with the user
-    def confirmation(self, confirm_data) -> bool:
-        if isinstance(confirm_data, datetime.date):
-            confirm_data = nice_date(confirm_data)
-        elif isinstance(confirm_data, datetime.time):
-            confirm_data = nice_time(confirm_data)
-        confirmation = self.ask_yesno('confirm', data={'confirmdata': confirm_data})
-        if confirmation == 'yes':
-            self.speak_dialog('confirmation', wait=True)
-            return True
-        elif confirmation == 'no':
-            self.speak_dialog('confirmation', wait=True)
-            return False
-        else:
-            self.speak_dialog('confirmation.error', wait=True)
-            return False
-
     @intent_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self):
         self.speak_dialog('create.event.calendar', wait=True)
@@ -101,34 +83,21 @@ class CalendarEvents(MycroftSkill):
             self.output_events(events)
 
     def event_creation(self):
-        summary = self.get_response('get.summary', num_retries=2)
-        if not self.confirmation(summary):
-            # Exits the skill if the user doesn't confirm the summary
-            self.speak_dialog('event.creation.cancelled')
-            self.shutdown()
-            return False
-        date = self.get_response('date', num_retries=2)
-        date = self.extract_date(date)
-        if date is None:
-            return False
-        if not self.confirmation(date):
-            # Exits the skill if the user doesn't confirm the date
-            self.speak_dialog('event.creation.cancelled')
-            self.shutdown()
-            return False
-        time = self.get_response('time', num_retries=2)
-        time = self.extract_date(time)
-        if time is None:
-            return False
-        if not self.confirmation(time):
-            # Exits the skill if the user doesn't confirm the time
-            self.speak_dialog('event.creation.cancelled')
-            self.shutdown()
-            return False
-        if not self.event_confirmation(summary, date, time):
-            self.speak_dialog('event.creation.cancelled')
-            self.shutdown()
-            return False
+        event_loop = True
+        while event_loop:
+            summary = self.get_response('get.summary', num_retries=2)
+            date = self.get_response('date', num_retries=2)
+            date = self.extract_date(date)
+            if date is None:
+                event_loop = False
+                return False
+            time = self.get_response('time', num_retries=2)
+            time = self.extract_date(time)
+            if time is None:
+                event_loop = False
+                return False
+            if self.event_confirmation(summary, date, time):
+                event_loop = False
         new_event = self.__caldavservice.create_event(summary, date, time)
         return new_event
 
