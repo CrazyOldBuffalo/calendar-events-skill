@@ -48,7 +48,7 @@ class CalendarEvents(MycroftSkill):
         if not self.connection():
             return True
         created_event = self.event_creation()
-        if created_event is False:
+        if created_event is None:
             return True
         if created_event.id is None:
             self.speak_dialog('event.creation.error', wait=True)
@@ -96,10 +96,15 @@ class CalendarEvents(MycroftSkill):
             if time is None:
                 event_loop = False
                 return False
-            if self.event_confirmation(summary, date, time):
+            confirmation = self.event_confirmation(summary, date, time)
+            if confirmation:
                 event_loop = False
-        new_event = self.__caldavservice.create_event(summary, date, time)
-        return new_event
+                return self.__caldavservice.create_event(summary, date, time)
+            elif confirmation is None:
+                event_loop = False
+                return False
+            else:
+                continue
 
     def event_confirmation(self, summary, date, time):
         confirmation = self.ask_yesno('event.confirmation', data={'summary': summary, 'date': date, 'time': time})
@@ -107,6 +112,8 @@ class CalendarEvents(MycroftSkill):
             return True
         elif confirmation == 'no':
             return False
+        else:
+            return None
 
     def created_event_output(self, created_event: EventObj) -> None:
         event_date = nice_date(created_event.get_startdate(), lang=self.lang)
