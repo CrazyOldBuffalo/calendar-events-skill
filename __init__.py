@@ -40,22 +40,11 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('calendar.error', wait=True)
             self.shutdown()
             return False
+        return True
 
     @intent_handler('create.event.calendar.intent')
-    def handle_create_events_calendar(self):
-        self.speak_dialog('create.event.calendar', wait=True)
-        self.initialize()
-        if not self.connection():
-            return True
-        created_event = self.event_creation()
-        if created_event is None:
-            return True
-        if created_event.id is None:
-            self.speak_dialog('event.creation.error', wait=True)
-            self.shutdown()
-            return True
-        created_event = self.__parser.parse(created_event)
-        self.created_event_output(created_event)
+    def handle_create_events_calendar(self, message=None):
+        self.speak("I'm crazy")
 
     @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
