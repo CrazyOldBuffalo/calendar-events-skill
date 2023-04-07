@@ -40,6 +40,7 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('calendar.error', wait=True)
             self.shutdown()
             return False
+        self.speak("I'm Connected")
         return True
 
     @intent_handler('create.event.calendar.intent')
