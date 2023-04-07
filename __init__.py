@@ -47,8 +47,10 @@ class CalendarEvents(MycroftSkill):
     def handle_create_events_calendar(self, message=None):
         self.speak_dialog('create.event.calendar')
         self.initialize()
-        if not self.connection():
-            return True
+        self.speak(self.__caldavservice)
+        if self.__caldavservice is None:
+            if not self.connection():
+                return True
         created_event = self.event_creation()
         created_event = self.__parser.parse(created_event)
         self.created_event_output(created_event)
