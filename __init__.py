@@ -131,6 +131,7 @@ class CalendarEvents(MycroftSkill):
             elif confirmation:
                 self.__event_loop = False
                 event_date  = datetime.datetime.combine(date, time.time())
+                event_date = to_local(event_date)
                 self.speak(nice_date_time(event_date, lang=self.lang))
                 created_event = self.__caldavservice.create_event(event_date, summary)
                 if created_event.id is None:
