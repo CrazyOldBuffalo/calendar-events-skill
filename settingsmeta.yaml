@@ -8,12 +8,12 @@ skillMetadata:
         - name: username
           type: text
           label: Username
-          value: "test1"
+          value: ""
         - name: password
           type: password
           label: Password
-          value: "password"
+          value: ""
         - name: url
           type: text
           label: url for CalDAV server
-          value: "https://localhost/dav.php"
+          value: ""
