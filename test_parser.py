@@ -6,6 +6,7 @@ import unittest
 
 
 class TestParser(unittest.TestCase):
+
     def test_create_parser(self):
         parser = IcsParser()
         self.assertIsInstance(parser, IcsParser)
@@ -16,7 +17,7 @@ class TestParser(unittest.TestCase):
         caldavservice = CalDAVService("http://localhost/dav.php", "test", "password")
         caldavservice.connect()
         calendars = caldavservice.get_calendars()
-        starttime = datetime.now()
+        starttime = datetime.now().replace(microsecond=0)
         summary = "test"
         event = caldavservice.create_event(starttime, summary)
         eventobj = parser.parse(event)
@@ -24,7 +25,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(eventobj.get_summary(), "test")
         self.assertEqual(eventobj.get_startdate(), starttime.date())
         self.assertEqual(eventobj.get_starttime(), starttime.time())
-        self.assertEqual(eventobj.get_startdatetime(), starttime)
+        self.assertEqual(eventobj.get_startdatetime(), datetime(starttime))
 
 
 
