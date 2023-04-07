@@ -59,9 +59,6 @@ class CalDAVService:
         )
         return event
 
-    def closeConection(self):
-        self.__client.close()
-
 
     # Getters and Setters
     def get_url(self) -> str:

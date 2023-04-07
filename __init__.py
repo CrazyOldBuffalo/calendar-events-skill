@@ -19,6 +19,7 @@ class CalendarEvents(MycroftSkill):
 
     def initialize(self):
         self.get_credentials()
+        self.speak(self.__url)
         self.__caldavservice = CalDAVService(self.__url, self.__username, self.__password)
         self.__parser = IcsParser()
 
@@ -49,8 +50,7 @@ class CalendarEvents(MycroftSkill):
     @intent_file_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message):
         self.speak_dialog('create.event.calendar', wait=True)
-        if self.__caldavservice is None:
-            self.initialize()
+        self.initialize()
         if not self.connection():
             return True
         self.event_creation()
