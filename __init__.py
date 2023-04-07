@@ -48,14 +48,7 @@ class CalendarEvents(MycroftSkill):
         if not self.connection():
             return True
         created_event = self.event_creation()
-        if created_event is None:
-            return True
-        if created_event.id is None:
-            self.speak_dialog('event.creation.error', wait=True)
-            self.shutdown()
-            return True
-        created_event = self.__parser.parse(created_event)
-        self.created_event_output(created_event)
+        
 
     @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
@@ -83,28 +76,20 @@ class CalendarEvents(MycroftSkill):
             self.output_events(events)
 
     def event_creation(self):
-        event_loop = True
-        while event_loop:
-            summary = self.get_response('get.summary', num_retries=2)
-            date = self.get_response('date', num_retries=2)
-            date = self.extract_date(date)
-            if date is None:
-                event_loop = False
-                return False
-            time = self.get_response('time', num_retries=2)
-            time = self.extract_date(time)
-            if time is None:
-                event_loop = False
-                return False
-            confirmation = self.event_confirmation(summary, date, time)
-            if confirmation:
-                event_loop = False
-                return self.__caldavservice.create_event(summary, date, time)
-            elif confirmation is None:
-                event_loop = False
-                return False
-            else:
-                continue
+        summary = self.get_response('get.summary', num_retries=2)
+        date = self.get_response('date', num_retries=2)
+        date = self.extract_date(date)
+        if date is None:
+            return False
+        time = self.get_response('time', num_retries=2)
+        time = self.extract_date(time)
+        if time is None:
+            return False
+        confirmation = self.event_confirmation(summary, date, time)
+        if confirmation:
+            return self.__caldavservice.create_event(summary, date, time)
+        elif confirmation is None:
+            return False
 
     def event_confirmation(self, summary, date, time):
         confirmation = self.ask_yesno('event.confirmation', data={'summary': summary, 'date': date, 'time': time})
