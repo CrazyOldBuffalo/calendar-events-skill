@@ -43,12 +43,13 @@ class CalendarEvents(MycroftSkill):
         self.speak("I'm Connected")
         return True
 
-    @intent_handler('create.event.calendar.intent')
+    @intent_file_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message):
-        self.initialize()
-        self.connection()
+        self.speak("ok")
 
-    @intent_handler('events.calendar.intent')
+        
+
+    @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
         self.initialize()
