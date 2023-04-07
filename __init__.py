@@ -136,10 +136,12 @@ class CalendarEvents(MycroftSkill):
     def event_confirmation(self, summary, date, time):
         confirmation = self.ask_yesno('event.confirmation', data={'summary': summary, 'date': date, 'time': time})
         if confirmation == 'yes':
+            self.speak_dialog('confirmation', wait=True)
             return True
         elif confirmation == 'no':
             return False
         else:
+            self.speak_dialog('confirmation.error', wait=True)
             return None
 
     def created_event_output(self, created_event: EventObj) -> None:
