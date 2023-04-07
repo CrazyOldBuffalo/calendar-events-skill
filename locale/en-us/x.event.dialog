@@ -1,1 +1,1 @@
-Event {num}: {summary}, it starts as {time}
+Event {num}: {summary}, it starts at {time}

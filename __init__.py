@@ -65,12 +65,15 @@ class CalendarEvents(MycroftSkill):
             return True
         created_event = self.event_creation()
         if created_event is None:
+            self.shutdown()
             return True
         elif created_event is False:
+            self.shutdown()
             return True
         else:
             cr_event = self.__parser.parse(created_event)
             self.created_event_output(cr_event)
+        
         
 
     @intent_file_handler('events.calendar.intent')
@@ -169,13 +172,13 @@ class CalendarEvents(MycroftSkill):
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
             ev_starttime = nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
-            self.speak_dialog('one.event', data={'summary': ev.get_summary(), 'date': ev_starttime})
+            self.speak_dialog('one.event', data={'summary': ev.get_summary(), 'time': ev_starttime})
         else:
             for event in events:
                 ev = self.__parser.parse(event)
                 ev_starttime = nice_time(ev.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
                 self.speak_dialog('x.event', data={'num': events.index(event) + 1, 'summary': ev.get_summary(),
-                                                   'date': ev_starttime})
+                                                   'time': ev_starttime})
 
 
 def create_skill():
