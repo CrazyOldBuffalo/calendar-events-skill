@@ -14,8 +14,8 @@ class CalendarEvents(MycroftSkill):
 
     def get_credentials(self):
         self.__url = self.settings.get("url", "http://localhost/dav.php")
-        self.__username = self.settings.get('username', "test")
-        self.__password = self.settings.get('password', "password")
+        self.__username = self.settings.get("username", "test")
+        self.__password = self.settings.get("password", "password")
 
     def initialize(self):
         self.get_credentials()
@@ -40,6 +40,7 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('calendar.error', wait=True)
             self.shutdown()
             return False
+        return True
 
     @intent_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self):
