@@ -11,15 +11,20 @@ class CalendarEvents(MycroftSkill):
 
     def __init__(self):
         MycroftSkill.__init__(self)
+        self.__event_loop = False
+        self.__url = None
+        self.__username = None
+        self.__password = None
+        self.__caldavservice = None
+        self.__parser = None
 
     def get_credentials(self):
-        self.__url = self.settings.get("url", "http://localhost/dav.php")
-        self.__username = self.settings.get('username', "test")
-        self.__password = self.settings.get('password', "password")
+        self.__url = "http://localhost/dav.php"
+        self.__username = "test"
+        self.__password = "password"
 
     def initialize(self):
         self.get_credentials()
-        self.speak(self.__url)
         self.__caldavservice = CalDAVService(self.__url, self.__username, self.__password)
         self.__parser = IcsParser()
 
@@ -27,7 +32,12 @@ class CalendarEvents(MycroftSkill):
         self.__caldavservice.closeConection()
 
     def extract_date(self, timeset):
-        exdate, rest = extract_datetime(timeset) or (None, None)
+        try:
+            exdate, rest = extract_datetime(timeset) or (None, None)
+        except (ValueError, TypeError):
+            self.speak_dialog('date.error', wait=True)
+            self.shutdown()
+            return None
         if exdate is None:
             self.speak_dialog('date.error', wait=True)
             self.shutdown()
@@ -53,7 +63,14 @@ class CalendarEvents(MycroftSkill):
         self.initialize()
         if not self.connection():
             return True
-        self.event_creation()
+        created_event = self.event_creation()
+        if created_event is None:
+            return True
+        elif created_event is False:
+            return True
+        else:
+            cr_event = self.__parser.parse(created_event)
+            self.created_event_output(cr_event)
         
 
     @intent_file_handler('events.calendar.intent')
@@ -85,11 +102,35 @@ class CalendarEvents(MycroftSkill):
     def event_creation(self):
         summary = self.get_response('summary', num_retries=2)
         date = self.get_response('date', num_retries=2)
+        if 'cancel'.lower() in date:    
+            self.speak_dialog('event.creation.cancelled', wait=True)
+            self.shutdown()
+            return False
         date = self.extract_date(date)
         time = self.get_response('time', num_retries=2)
+        if 'cancel'.lower() in time:    
+            self.speak_dialog('event.creation.cancelled', wait=True)
+            self.shutdown()
+            return False
         time = self.extract_date(time)
-        self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
-
+        if date is None or time is None:
+            self.speak_dialog('event.creation.error', wait=True)
+            self.shutdown()
+            return False
+        confirmation = self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
+        if confirmation is None:
+            self.speak_dialog('event.creation.error', wait=True)
+            self.shutdown()
+            return False
+        elif confirmation:
+            event_date  = datetime.datetime.combine(date, time.time())
+            created_event = self.__caldavservice.create_event(event_date, summary)
+            if created_event.id is None:
+                self.speak_dialog('event.creation.error', wait=True)
+                self.shutdown()
+                return False
+            else:
+                return created_event
 
 
     def event_confirmation(self, summary, date, time):
