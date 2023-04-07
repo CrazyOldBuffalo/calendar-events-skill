@@ -46,13 +46,17 @@ class CalendarEvents(MycroftSkill):
         self.speak("I'm Connected")
         return True
 
-    @intent_handler('create.event.calendar.intent')
+    @intent_file_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message):
-        self.speak("ha", wait=True)
-
+        self.speak_dialog('create.event.calendar', wait=True)
+        if self.__caldavservice is None:
+            self.initialize()
+        if not self.connection():
+            return True
+        self.event_creation()
         
 
-    @intent_handler('events.calendar.intent')
+    @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
         self.initialize()
@@ -79,9 +83,13 @@ class CalendarEvents(MycroftSkill):
             self.output_events(events)
 
     def event_creation(self):
-        summary = self.get_response('get.summary', num_retries=2)
+        summary = self.get_response('summary', num_retries=2)
         date = self.get_response('date', num_retries=2)
         date = self.extract_date(date)
+        time = self.get_response('time', num_retries=2)
+        time = self.extract_date(time)
+        self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
+
 
 
     def event_confirmation(self, summary, date, time):
