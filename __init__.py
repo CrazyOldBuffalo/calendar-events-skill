@@ -65,12 +65,15 @@ class CalendarEvents(MycroftSkill):
             return True
         created_event = self.event_creation()
         if created_event is None:
+            self.shutdown()
             return True
         elif created_event is False:
+            self.shutdown()
             return True
         else:
             cr_event = self.__parser.parse(created_event)
             self.created_event_output(cr_event)
+        
         
 
     @intent_file_handler('events.calendar.intent')
