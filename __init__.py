@@ -45,7 +45,7 @@ class CalendarEvents(MycroftSkill):
 
     @intent_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message=None):
-        self.speak_dialog('create.event.calendar', wait=True)
+        self.speak_dialog('create.event.calendar')
         self.initialize()
         if not self.connection():
             return True
