@@ -100,37 +100,47 @@ class CalendarEvents(MycroftSkill):
             self.output_events(events)
 
     def event_creation(self):
-        summary = self.get_response('summary', num_retries=2)
-        date = self.get_response('date', num_retries=2)
-        if 'cancel'.lower() in date:    
-            self.speak_dialog('event.creation.cancelled', wait=True)
-            self.shutdown()
-            return False
-        date = self.extract_date(date)
-        time = self.get_response('time', num_retries=2)
-        if 'cancel'.lower() in time:    
-            self.speak_dialog('event.creation.cancelled', wait=True)
-            self.shutdown()
-            return False
-        time = self.extract_date(time)
-        if date is None or time is None:
-            self.speak_dialog('event.creation.error', wait=True)
-            self.shutdown()
-            return False
-        confirmation = self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
-        if confirmation is None:
-            self.speak_dialog('event.creation.error', wait=True)
-            self.shutdown()
-            return False
-        elif confirmation:
-            event_date  = datetime.datetime.combine(date, time.time())
-            created_event = self.__caldavservice.create_event(event_date, summary)
-            if created_event.id is None:
+        self.__event_loop = True
+        while self.__event_loop:
+            summary = self.get_response('summary', num_retries=2)
+            date = self.get_response('date', num_retries=2)
+            if date is None:
+                self.__event_loop = False
+                self.speak_dialog('event.creation.cancelled', wait=True)
+                self.shutdown()
+                return False
+            date = self.extract_date(date)
+            time = self.get_response('time', num_retries=2)
+            if time is None:
+                self.__event_loop = False
+                self.speak_dialog('event.creation.cancelled', wait=True)
+                self.shutdown()
+                return False
+            time = self.extract_date(time)
+            if date is None or time is None:
+                self.__event_loop = False
                 self.speak_dialog('event.creation.error', wait=True)
                 self.shutdown()
                 return False
+            confirmation = self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
+            if confirmation is None:
+                self.__event_loop = False
+                self.speak_dialog('event.creation.error', wait=True)
+                self.shutdown()
+                return False
+            elif confirmation:
+                self.__event_loop = False
+                event_date  = datetime.datetime.combine(date, time.time())
+                self.speak(nice_date_time(event_date, lang=self.lang))
+                created_event = self.__caldavservice.create_event(event_date, summary)
+                if created_event.id is None:
+                    self.speak_dialog('event.creation.error', wait=True)
+                    self.shutdown()
+                    return False
+                else:
+                    return created_event
             else:
-                return created_event
+                continue
 
 
     def event_confirmation(self, summary, date, time):
