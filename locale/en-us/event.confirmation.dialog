@@ -1,3 +1,3 @@
-I got, {summary}, on the {date} at {time}, is that correct?
-Is this correct? {summary}, on the {date} at {time}?
-Is {summary} on the {date} at {time} correct?
+I got, {summary}, on {date} at {time}, is that correct?
+Is this correct? {summary}, on {date} at {time}?
+Is {summary} on {date} at {time} correct?
