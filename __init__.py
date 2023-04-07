@@ -22,6 +22,9 @@ class CalendarEvents(MycroftSkill):
         self.__caldavservice = CalDAVService(self.__url, self.__username, self.__password)
         self.__parser = IcsParser()
 
+    def shutdown(self):
+        self.__caldavservice.closeConection()
+
     def extract_date(self, timeset):
         exdate, rest = extract_datetime(timeset) or (None, None)
         if exdate is None:
@@ -43,13 +46,13 @@ class CalendarEvents(MycroftSkill):
         self.speak("I'm Connected")
         return True
 
-    @intent_file_handler('create.event.calendar.intent')
+    @intent_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message):
-        self.speak("ok")
+        self.speak("ha", wait=True)
 
         
 
-    @intent_file_handler('events.calendar.intent')
+    @intent_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
         self.speak_dialog('events.calendar', wait=True)
         self.initialize()
@@ -66,6 +69,7 @@ class CalendarEvents(MycroftSkill):
             self.__today = False
             self.__timeset = self.extract_date(data)
         self.handle_events()
+        self.shutdown()
 
     def handle_events(self):
         events = self.__caldavservice.get_events_date(self.__timeset)

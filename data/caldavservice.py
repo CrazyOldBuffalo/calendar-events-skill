@@ -12,12 +12,13 @@ class CalDAVService:
         self.__username = username
         self.__password = password
         self.__url = url
+        self.__client = None
         self.__principal = None
 
     def connect(self) -> bool:
         try:
-            client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
-            self.__principal = client.principal()
+            self.__client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
+            self.__principal = self.__client.principal()
         except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, TimeoutError, E):
             self.__principal = None
             return False
@@ -57,6 +58,10 @@ class CalDAVService:
             summary=summary,
         )
         return event
+
+    def closeConection(self):
+        self.__client.close()
+
 
     # Getters and Setters
     def get_url(self) -> str:
