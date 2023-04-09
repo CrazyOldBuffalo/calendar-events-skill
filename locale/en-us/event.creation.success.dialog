@@ -1,2 +1,2 @@
-I've created your event {summary}, on {date} at {time}.
-your event {summary}, has been created on {date} at {time}.
+I've created your event: {summary}, on {date} at {time}.
+your event: {summary}, has been created on {date} at {time}.

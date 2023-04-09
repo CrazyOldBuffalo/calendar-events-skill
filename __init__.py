@@ -135,7 +135,6 @@ class CalendarEvents(MycroftSkill):
                 self.__event_loop = False
                 event_date  = datetime.datetime.combine(date, time.time())
                 event_date = to_local(event_date)
-                self.speak(nice_date_time(event_date, lang=self.lang))
                 created_event = self.__caldavservice.create_event(event_date, summary)
                 if created_event.id is None:
                     self.speak_dialog('event.creation.error', wait=True)
@@ -153,7 +152,11 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('confirmation', wait=True)
             return True
         elif confirmation == 'no':
+            self.speak_dialog('retry', wait=True)
             return False
+        elif confirmation is None:
+            self.speak_dialog('confirmation', wait=True)
+            return None
         else:
             self.speak_dialog('confirmation.error', wait=True)
             return None
