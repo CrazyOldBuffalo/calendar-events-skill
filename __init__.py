@@ -83,15 +83,14 @@ class CalendarEvents(MycroftSkill):
         if not self.connection():
             return True
         data = message.data.get('date')
-        if data is None:
-            self.__timeset = now_utc()
-            self.__today = True
-        elif 'today'.lower() in data:
+        if 'today'.lower() in data:
             self.__today = True
             self.__timeset = self.extract_date(data)
         else:
             self.__today = False
             self.__timeset = self.extract_date(data)
+        if self.__timeset is None:
+            return True
         self.handle_events()
         self.shutdown()
 
@@ -168,9 +167,13 @@ class CalendarEvents(MycroftSkill):
                                                           'time': event_time})
 
     def output_events(self, events: list[caldav.Event]):
-        if self.__today:
-            self.speak('You have {} event today'.format(len(events)))
-        else:
+        if len(events) == 1 and self.__today:
+            self.speak('You have one event today')
+        elif  len(events) > 1 and self.__today:
+            self.speak('You have {} events today'.format(len(events)))
+        elif len(events) == 1 and not self.__today:
+            self.speak('You have one event on {}'.format(nice_date(self.__timeset, lang=self.lang)))
+        elif len(events) > 1 and not self.__today:
             self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset, lang=self.lang)))
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
