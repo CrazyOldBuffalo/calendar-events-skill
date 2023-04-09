@@ -6,6 +6,8 @@ Skill allows the user to connect to their CalDAV Server using their credentials 
 
 Also allows users to create an event on that date by asking users for the summary, the date and the time of the event and saves it to the calendar after it has been confirmed. 
 
+> :warning: **Warning:** This implementation is aimed at a LOCAL deployment only and not designed to work over an unsecure network or via the internet.
+
 ## Examples
 * ### Searching
 * "Do i have anything on {date}"
