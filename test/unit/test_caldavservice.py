@@ -9,14 +9,23 @@ class TestCalDavService(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        cls.flag = False
         cls.CalDAVService = CalDAVService("http://localhost/dav.php", "test", "password")
-        cls.CalDAVService.connect()
-        cls.CalDAVService.get_calendars()
+        if not cls.CalDAVService.connect() or not cls.CalDAVService.get_calendars():
+            cls.flag = True
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.CalDAVService.closeConection()
     # tests creating a caldavservice object
+
+    def cleanUp(self, caldavservice : CalDAVService):
+        caldavservice.closeConection()
+
+
+    def setUp(self) -> None:
+        if self.flag:
+            self.fail("Connection error")
 
     def test_create_caldavservice(self):
         username = "username"
@@ -32,11 +41,13 @@ class TestCalDavService(unittest.TestCase):
     def test_connect(self):
         caldavservice = CalDAVService("http://localhost/dav.php", "test", "password")
         self.assertTrue(caldavservice.connect())
+        self.cleanUp(caldavservice)
 
     # tests failure to connect to a caldav server
     def test_connect_fail(self):
         caldavservice = CalDAVService("http://localhost/dav.php", "notusername", "notpassword")
         self.assertFalse(caldavservice.connect())
+        self.cleanUp(caldavservice)
 
     def test_principal(self):
         self.assertIsNotNone(self.CalDAVService.get_principal())

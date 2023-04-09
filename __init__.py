@@ -1,6 +1,6 @@
 import datetime
 import caldav
-from .data import *
+from .data import EventObj, CalDAVService, IcsParser
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from mycroft.util.parse import extract_datetime
 from mycroft.util.time import now_utc, to_local
@@ -83,15 +83,14 @@ class CalendarEvents(MycroftSkill):
         if not self.connection():
             return True
         data = message.data.get('date')
-        if data is None:
-            self.__timeset = now_utc()
-            self.__today = True
-        elif 'today'.lower() in data:
+        if 'today'.lower() in data:
             self.__today = True
             self.__timeset = self.extract_date(data)
         else:
             self.__today = False
             self.__timeset = self.extract_date(data)
+        if self.__timeset is None:
+            return True
         self.handle_events()
         self.shutdown()
 
@@ -135,7 +134,6 @@ class CalendarEvents(MycroftSkill):
                 self.__event_loop = False
                 event_date  = datetime.datetime.combine(date, time.time())
                 event_date = to_local(event_date)
-                self.speak(nice_date_time(event_date, lang=self.lang))
                 created_event = self.__caldavservice.create_event(event_date, summary)
                 if created_event.id is None:
                     self.speak_dialog('event.creation.error', wait=True)
@@ -153,7 +151,11 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('confirmation', wait=True)
             return True
         elif confirmation == 'no':
+            self.speak_dialog('retry', wait=True)
             return False
+        elif confirmation is None:
+            self.speak_dialog('confirmation', wait=True)
+            return None
         else:
             self.speak_dialog('confirmation.error', wait=True)
             return None
@@ -165,9 +167,13 @@ class CalendarEvents(MycroftSkill):
                                                           'time': event_time})
 
     def output_events(self, events: list[caldav.Event]):
-        if self.__today:
-            self.speak('You have {} event today'.format(len(events)))
-        else:
+        if len(events) == 1 and self.__today:
+            self.speak('You have one event today')
+        elif  len(events) > 1 and self.__today:
+            self.speak('You have {} events today'.format(len(events)))
+        elif len(events) == 1 and not self.__today:
+            self.speak('You have one event on {}'.format(nice_date(self.__timeset, lang=self.lang)))
+        elif len(events) > 1 and not self.__today:
             self.speak('You have {} events on {}'.format(len(events), nice_date(self.__timeset, lang=self.lang)))
         if len(events) == 1:
             ev = self.__parser.parse(events[0])
