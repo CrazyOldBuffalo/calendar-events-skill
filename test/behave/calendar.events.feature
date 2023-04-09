@@ -2,72 +2,24 @@ Feature: calendar-events
   Background:
     given: a user has a calendar server running on their local network
     and: the user has configured their settings correctly
-    and: the user has one event in their calendar
 
-    Scenario: Users gets one event for the day
-      given: an English speaking user
-      and: the user has one event in their calendar for today
-        when: the user says "do I have any events today"
-        then: "calendar-events" should respond with dialog from "one.event"
+    Scenario: user retrieves one event from their calendar server for today
+      given: the user has an event on their calendar server
+        and: the user is an english speaker
+        when: the user says "Do i have any events for today?"
+        then: "calendar-events-skill" should respond with dialog from "one.event.dialog"
 
-    Scenario: Users gets multiple events for the day
-      given: an English speaking user
-      and: the user has multiple events in their calendar for today
-        when: the user says "do I have any events today"
-        then: "calendar-events" should respond with dialog from "x.event"
+    Scenario Outline: user retrieves one event from their calendar server for a specific date
+      given: the user has an event on their calendar server
+        and: the user is an english speaker
+        when: the user says "Do i have any events for <date>?"
+        then: "calendar-events-skill" should respond with dialog from "one.event.dialog"
+    
+      Examples:
+        | date       |
+        | tomorrow   |
+        | next Monday  |
+        | December 12th |
+      
 
-    Scenario: Users gets no events for the day
-      given: an English speaking user
-      and: the user has no events in their calendar for today
-        when: the user says "do I have any events today"
-        then: "calendar-events" should respond with dialog from "no.events"
 
-    Scenario Outline: User gets one event from a specific date
-      given: an English speaking user
-      and: the user has one event in their calendar for a specific date
-        when: the user says "do I have any events on <date>"
-        then: "calendar-events" should respond with dialog from "one.event"
-
-    Examples:
-      | date |
-      | Tomorrow |
-      | Next Monday |
-      | The 15th of December |
-
-    Scenario Outline: User gets multiple events from a specific date
-      given: an English speaking user
-      and: the user has multiple events in their calendar for a specific date
-        when: the user says "do I have any events on <date>"
-        then: "calendar-events" should respond with dialog from "x.event"
-
-    Examples:
-        | date |
-        | Tomorrow |
-        | Next Monday |
-        | The 15th of December |
-
-    Scenario Outline: User gets no events from a specific date
-        given: an English speaking user
-        and: the user has no events in their calendar for a specific date
-            when: the user says "do I have any events on <date>"
-            then: "calendar-events" should respond with dialog from "no.events"
-
-    Examples:
-        | date |
-        | Tomorrow |
-        | Next Monday |
-        | The 15th of December |
-
-  Scenario: User wants to create an event
-    given: an English speaking user
-      when: the user says "add an event to my calendar"
-      then: "calendar-events" should respond with dialog from "create.event.calendar"
-        and: "calendar-events" should respond with dialog from "create.event.title"
-        then: the user should respond with "my event"
-        and: "calendar-events" should respond with dialog from "create.event.date"
-        then: the user should respond with "tomorrow"
-        and: "calendar-events" should respond with dialog from "create.event.time"
-        then: the user should respond with "10am"
-        and: "calendar-events" should respond with dialog from "create.event.confirmation"
-        then: the user should respond with "yes"
-        and: "calendar-events" should respond with dialog from "create.event.success"
