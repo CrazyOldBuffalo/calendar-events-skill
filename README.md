@@ -18,6 +18,7 @@ Also allows users to create an event on that date by asking users for the summar
 
 ## Credits
 CrazyOldBuffalo
+
 Cyril & tobixen - Caldav Library (https://github.com/python-caldav/)
 
 ## Category
