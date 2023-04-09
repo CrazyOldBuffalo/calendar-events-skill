@@ -1,6 +1,6 @@
 import datetime
 import caldav
-from .data import *
+from .data import EventObj, CalDAVService, IcsParser
 from mycroft import MycroftSkill, intent_file_handler, intent_handler
 from mycroft.util.parse import extract_datetime
 from mycroft.util.time import now_utc, to_local
