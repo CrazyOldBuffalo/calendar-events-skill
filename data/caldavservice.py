@@ -19,7 +19,8 @@ class CalDAVService:
         try:
             self.__client = caldav.DAVClient(url=self.__url, username=self.__username, password=self.__password)
             self.__principal = self.__client.principal()
-        except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, TimeoutError, E, caldav.lib.error.AuthorizationError):
+        except (ConnectionError, ConnectionRefusedError, ConnectionAbortedError, TimeoutError, E,
+                caldav.lib.error.AuthorizationError):
             self.__principal = None
             return False
         return True
@@ -30,6 +31,14 @@ class CalDAVService:
             return True
         except IndexError:
             return False
+
+    def get_event_summary(self, date: datetime, summary: str) -> list[caldav.Event]:
+        return self.__calendars.search(start=to_local(date),
+                                       end=to_local(date.replace(hour=23, minute=59, second=58)), expand=False,
+                                       event=True, summary=summary)
+
+    def get_event_by_id(self, uid: str):
+        return self.__calendars.event_by_uid(uid)
 
     def get_events_today(self) -> list[caldav.Event]:
         events = self.__calendars.search(start=to_local(now_utc()),
@@ -59,11 +68,16 @@ class CalDAVService:
         )
         return event
 
+    def delete_event(self, eventid: str) -> bool:
+        event = self.get_event_by_id(eventid)
+        if event is not None:
+            event.delete()
+            return True
+        return False
+
     def closeConection(self):
         self.__client.close()
         self.__client.__exit__(None, None, None)
-
-
 
     # Getters and Setters
     def get_url(self) -> str:

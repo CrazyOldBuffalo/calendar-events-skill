@@ -1,10 +1,11 @@
-import datetime
+from datetime import datetime
 import caldav
-from .data import EventObj, CalDAVService, IcsParser
-from mycroft import MycroftSkill, intent_file_handler, intent_handler
+from lingua_franca.format import nice_time, nice_date
+from mycroft import MycroftSkill, intent_file_handler
 from mycroft.util.parse import extract_datetime
-from mycroft.util.time import now_utc, to_local
-from lingua_franca.format import nice_date_time, nice_time, nice_date
+from mycroft.util.time import to_local
+
+from .data import EventObj, CalDAVService, IcsParser
 
 
 class CalendarEvents(MycroftSkill):
@@ -57,6 +58,14 @@ class CalendarEvents(MycroftSkill):
         self.speak("I'm Connected")
         return True
 
+    @intent_file_handler('delete.intent')
+    def handle_delete(self, message):
+        self.speak_dialog('delete', wait=True)
+        self.initialize()
+        if not self.connection():
+            return True
+        deleted_event = self.event_deletion()
+
     @intent_file_handler('create.event.calendar.intent')
     def handle_create_events_calendar(self, message):
         self.speak_dialog('create.event.calendar', wait=True)
@@ -73,8 +82,6 @@ class CalendarEvents(MycroftSkill):
         else:
             cr_event = self.__parser.parse(created_event)
             self.created_event_output(cr_event)
-        
-        
 
     @intent_file_handler('events.calendar.intent')
     def handle_events_calendar(self, message):
@@ -124,7 +131,8 @@ class CalendarEvents(MycroftSkill):
                 self.speak_dialog('event.creation.error', wait=True)
                 self.shutdown()
                 return False
-            confirmation = self.event_confirmation(summary, nice_date(date, lang=self.lang), nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
+            confirmation = self.event_confirmation(summary, nice_date(date, lang=self.lang),
+                                                   nice_time(time, lang=self.lang, use_24hour=False, use_ampm=True))
             if confirmation is None:
                 self.__event_loop = False
                 self.speak_dialog('event.creation.error', wait=True)
@@ -132,7 +140,7 @@ class CalendarEvents(MycroftSkill):
                 return False
             elif confirmation:
                 self.__event_loop = False
-                event_date  = datetime.datetime.combine(date, time.time())
+                event_date = datetime.datetime.combine(date, time.time())
                 event_date = to_local(event_date)
                 created_event = self.__caldavservice.create_event(event_date, summary)
                 if created_event.id is None:
@@ -143,7 +151,6 @@ class CalendarEvents(MycroftSkill):
                     return created_event
             else:
                 continue
-
 
     def event_confirmation(self, summary, date, time):
         confirmation = self.ask_yesno('event.confirmation', data={'summary': summary, 'date': date, 'time': time})
@@ -160,6 +167,59 @@ class CalendarEvents(MycroftSkill):
             self.speak_dialog('confirmation.error', wait=True)
             return None
 
+    def event_deletion(self):
+        summary = self.get_response('summary', num_retries=2)
+        date = self.get_response('date', num_retries=2)
+        if date is None:
+            self.speak_dialog('event.deletion.cancelled', wait=True)
+            self.shutdown()
+            return False
+        date = self.extract_date(date)
+        if date is None:
+            self.speak_dialog('event.deletion.error', wait=True)
+            self.shutdown()
+            return False
+        time = datetime.time(0, 0, 0)
+        event_date = datetime.datetime.combine(date, time)
+        event_date = to_local(event_date)
+        event_to_delete = self.__caldavservice.get_event_summary(event_date, summary)
+        if len(event_to_delete) == 0:
+            self.speak_dialog('no.events', data={'date': event_date}, wait=True)
+            self.shutdown()
+            return False
+        elif len(event_to_delete) == 1:
+            event = self.__parser.parse(event_to_delete[0])
+            confirmation = self.ask_yesno('event.deletion.confirmation', data={'summary': event.summary(),
+                                                                               'date': nice_date(event.get_date(),
+                                                                                                 lang=self.lang),
+                                                                               'time': nice_time(event.get_time(),
+                                                                                                 lang=self.lang,
+                                                                                                 use_24hour=False,
+                                                                                                 use_ampm=True)})
+            if confirmation == 'yes':
+                if self.__caldavservice.delete_event(event_to_delete[0].url):
+                    self.speak_dialog('event.deletion.success', wait=True)
+                    self.shutdown()
+                    return True
+                else:
+                    self.speak_dialog('event.deletion.error', wait=True)
+                    self.shutdown()
+                    return False
+            elif confirmation == 'no':
+                self.speak_dialog('event.deletion.cancelled', wait=True)
+                self.shutdown()
+                return False
+            elif confirmation is None:
+                self.speak_dialog('event.deletion.cancelled', wait=True)
+                self.shutdown()
+                return False
+            else:
+                self.speak_dialog('confirmation.error', wait=True)
+                return False
+        else:
+            # Under Construction
+            pass
+
     def created_event_output(self, created_event: EventObj) -> None:
         event_date = nice_date(created_event.get_startdate(), lang=self.lang)
         event_time = nice_time(created_event.get_starttime(), lang=self.lang, use_24hour=False, use_ampm=True)
@@ -169,7 +229,7 @@ class CalendarEvents(MycroftSkill):
     def output_events(self, events: list[caldav.Event]):
         if len(events) == 1 and self.__today:
             self.speak('You have one event today')
-        elif  len(events) > 1 and self.__today:
+        elif len(events) > 1 and self.__today:
             self.speak('You have {} events today'.format(len(events)))
         elif len(events) == 1 and not self.__today:
             self.speak('You have one event on {}'.format(nice_date(self.__timeset, lang=self.lang)))
