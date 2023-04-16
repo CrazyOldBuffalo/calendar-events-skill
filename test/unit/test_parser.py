@@ -1,19 +1,23 @@
+import os
+import sys
+import unittest
+from datetime import datetime
+
 from data import CalDAVService
 from data import EventObj
 from data import IcsParser
-from datetime import datetime
-import sys, os
-import unittest
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 class TestParser(unittest.TestCase):
 
+    # Tests creating a parser object - [UT-021]
     def test_create_parser(self):
         parser = IcsParser()
         self.assertIsInstance(parser, IcsParser)
 
-
+    # Tests the parsing of an event - [UT-022]
     def test_parse(self):
         parser = IcsParser()
         caldavservice = CalDAVService("http://localhost/dav.php", "test", "password")

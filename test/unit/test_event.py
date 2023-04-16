@@ -5,7 +5,6 @@ import unittest
 
 class TestEventObj(unittest.TestCase):
 
-
     # Sets up the test environment
     @classmethod
     def setUpClass(cls) -> None:
