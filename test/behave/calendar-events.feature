@@ -1,7 +1,8 @@
 Feature: calendar-events
 
-  Scenario Outline: Retreive One event from the calendar from a specific date
-    Given an English speaking user
+  Scenario Outline: Retreive One event from the calendar from a specific date - [IT001]
+    Given The user wants to retrieve an event from their calendar
+    And an English speaking user
     When the user says "Do i have anything on <event>?"
     Then "calendar-events" should reply with dialog from "events.calendar.dialog"
     Then "calendar-events" should reply with dialog from "one.event.dialog"
@@ -11,7 +12,7 @@ Feature: calendar-events
       | next Tuesday |
       | next Wednesday |
 
-  Scenario Outline: Retreieve Multiple events from the calendar for a specific date
+  Scenario Outline: Retreieve Multiple events from the calendar for a specific date - [IT002]
     Given an English speaking user
     When the user says "Do i have anything on <event>?"
     Then "calendar-events" should reply with dialog from "events.calendar.dialog"
@@ -22,7 +23,7 @@ Feature: calendar-events
       | today |
       | tomorrow |
 
-  Scenario Outline: Retrieve no events from the calendar for a specific date
+  Scenario Outline: Retrieve no events from the calendar for a specific date - [IT003]
     Given an English speaking user
     When the user says "Do i have anything on <event>?"
     Then "calendar-events" should reply with dialog from "events.calendar.dialog"
@@ -33,7 +34,7 @@ Feature: calendar-events
       | 17th of August |
       | 12th of December |
 
-  Scenario Outline: User asks for a non date
+  Scenario Outline: User asks for a non date - [IT004]
     Given an English speaking user
     When the user says "Do i have anything on <event>?"
     Then "calendar-events" should reply with dialog from "events.calendar.dialog"
@@ -44,7 +45,7 @@ Feature: calendar-events
       | Bacon |
       | Turtle |
 
-  Scenario Outline: User creates am event in their calendar
+  Scenario Outline: User creates am event in their calendar - [IT005]
     Given an English speaking user
     When the user says "Create an event in my calendar"
     Then "calendar-events" should reply with dialog from "create.event.calendar.dialog"
@@ -63,7 +64,7 @@ Feature: calendar-events
       | Meeting | 17th of August | 12:00pm |
       | Dinner | 12th of December | 19:00 |
 
-  Scenario Outline: User creates an event in their calendar but doesn't confirm
+  Scenario Outline: User creates an event in their calendar but doesn't confirm - [IT006]
     Given an English speaking user
     When the user says "Create an event in my calendar"
     Then "calendar-events" should reply with dialog from "create.event.calendar.dialog"
@@ -91,7 +92,7 @@ Feature: calendar-events
       | Meeting | 17th of August | 12:00pm |
       | Dinner | 12th of December | 19:00 |
 
-  Scenario Outline: User creates an event in their calendar but cancels
+  Scenario Outline: User creates an event in their calendar but cancels - [IT007]
     Given an English speaking user
     When the user says "Create an event in my calendar"
     Then "calendar-events" should reply with dialog from "create.event.calendar.dialog"
@@ -110,7 +111,7 @@ Feature: calendar-events
       | Meeting | 17th of August | 12:00pm |
       | Dinner | 12th of December | 19:00 |
 
-  Scenario Outline: User creates an event in their calendar but cancels time
+  Scenario Outline: User creates an event in their calendar but cancels time - [IT008]
     Given an English speaking user
     When the user says "Create an event in my calendar"
     Then "calendar-events" should reply with dialog from "create.event.calendar.dialog"
@@ -127,7 +128,7 @@ Feature: calendar-events
       | Meeting | 17th of August |
       | Dinner | 12th of December |
 
-  Scenario Outline: User creates an event in their calendar but cancels date
+  Scenario Outline: User creates an event in their calendar but cancels date - [IT009]
     Given an English speaking user
     When the user says "Create an event in my calendar"
     Then "calendar-events" should reply with dialog from "create.event.calendar.dialog"
