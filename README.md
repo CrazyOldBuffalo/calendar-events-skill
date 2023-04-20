@@ -21,7 +21,7 @@ Within the skill settings you will need to enter the following information:
 
 This skill should then communicate with the server.
 
-> :Note: **Note:** The skill works by using the default calendar on the server. If you have multiple calendars on the server you will need to change the default calendar to the one you want to use in `data/caldavservice.py` in `get_calendars()`.   
+>  **Note:** The skill works by using the default calendar on the server. If you have multiple calendars on the server you will need to change the default calendar to the one you want to use in `data/caldavservice.py` in `get_calendars()`.   
     
 
 ## Examples
